@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>html,body{height:100%}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>The Lockbox Trials</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Outfit:wght@400;500;600;700&family=DM+Mono:wght@500&display=swap">
+<style>
+/* Layout: a detective's desk at night. Dark green leather blotter with a brass padlock up top, and three paper sheets (one per digit) stacked down the middle: a torn note, a safe dial, a ticket strip. One deliberate look in both themes. */
+:root{
+  --mat:#1d4a38; --mat-line:rgba(255,255,255,.07); --mat-line-strong:rgba(255,255,255,.14);
+  --sheet:#fbfaf6; --ink:#24252b; --ink-soft:#5f6168; --rule:#e3e0d6; --paper-2:#f1eee5;
+  --brass:#d2a73a; --brass-dark:#8e6b17; --steel:#202227;
+  --good:#2f8a4e; --bad:#c2352b;
+  --a1:#d7263d; --a2:#2b6fd6; --a3:#7b4bc4; --sun:#f6c945; --tangerine:#f26a2e;
+  --f-display:"Bagel Fat One","Arial Rounded MT Bold","Trebuchet MS",sans-serif;
+  --f-body:"Outfit","Segoe UI",system-ui,sans-serif;
+  --f-mono:"DM Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{background:var(--mat)}
+body{
+  background-color:var(--mat);
+  background-image:
+    linear-gradient(var(--mat-line-strong) 1px,transparent 1px),
+    linear-gradient(90deg,var(--mat-line-strong) 1px,transparent 1px),
+    linear-gradient(var(--mat-line) 1px,transparent 1px),
+    linear-gradient(90deg,var(--mat-line) 1px,transparent 1px);
+  background-size:100px 100px,100px 100px,20px 20px,20px 20px;
+  color:var(--sheet); font-family:var(--f-body); font-size:16px; line-height:1.5;
+  padding:0 16px; padding-block:0 64px; min-height:100%;
+}
+.ruler{
+  height:26px; margin:0 -16px 28px; border-bottom:1px solid var(--mat-line-strong);
+  background:
+    repeating-linear-gradient(90deg,rgba(255,255,255,.55) 0 1px,transparent 1px 100px) 0 0/100% 14px no-repeat,
+    repeating-linear-gradient(90deg,rgba(255,255,255,.35) 0 1px,transparent 1px 50px) 0 0/100% 9px no-repeat,
+    repeating-linear-gradient(90deg,rgba(255,255,255,.22) 0 1px,transparent 1px 10px) 0 0/100% 5px no-repeat;
+}
+.wrap{max-width:720px; margin:0 auto; display:flex; flex-direction:column; gap:28px}
+
+/* header + lock */
+header{display:grid; grid-template-columns:1fr auto; gap:20px; align-items:center}
+@media (max-width:560px){header{grid-template-columns:1fr; justify-items:center; text-align:center}}
+h1{font-family:var(--f-display); font-weight:400; font-size:clamp(2.2rem,7vw,3.4rem); line-height:1; margin:0; text-wrap:balance; letter-spacing:.01em}
+h1 .c1{color:var(--sun)} h1 .c2{color:var(--tangerine)}
+.lede{margin:12px 0 0; max-width:40ch; color:rgba(251,250,246,.82)}
+.gm-btn{margin-top:14px; font:600 .8rem/1 var(--f-body); letter-spacing:.08em; text-transform:uppercase; color:var(--brass); background:none; border:1px dashed var(--brass); border-radius:6px; padding:8px 12px; cursor:pointer}
+.gm-btn:hover{background:rgba(210,167,58,.12)}
+
+.lock{position:relative; width:220px; padding-top:62px; flex:none}
+.shackle{position:absolute; left:50%; top:0; width:120px; height:100px; margin-left:-60px; border:16px solid #b9bcc4; border-bottom:none; border-radius:60px 60px 0 0; transition:transform .7s cubic-bezier(.3,1.6,.5,1); transform-origin:100% 100%}
+.lock.open .shackle{transform:translateY(-26px) rotate(18deg)}
+.lock-body{position:relative; background:linear-gradient(160deg,#e7c25a,var(--brass) 45%,var(--brass-dark)); border-radius:18px; padding:20px 18px 16px; box-shadow:0 10px 0 rgba(0,0,0,.25), inset 0 2px 0 rgba(255,255,255,.4)}
+.wheels{display:flex; gap:10px; justify-content:center}
+.wheel{width:52px; height:66px; border-radius:10px; background:var(--steel); display:grid; place-items:center; font:500 2.1rem/1 var(--f-mono); color:#6b6e77; box-shadow:inset 0 6px 8px rgba(0,0,0,.6), inset 0 -6px 8px rgba(0,0,0,.6)}
+.wheel.set{color:#fff; animation:spin .5s ease-out}
+.wheel.set[data-i="0"]{text-shadow:0 0 12px rgba(215,38,61,.8)}
+.wheel.set[data-i="1"]{text-shadow:0 0 12px rgba(43,111,214,.8)}
+.wheel.set[data-i="2"]{text-shadow:0 0 12px rgba(123,75,196,.8)}
+@keyframes spin{0%{transform:translateY(-14px);opacity:.2}60%{transform:translateY(4px)}100%{transform:none;opacity:1}}
+.lock-label{margin:10px 0 0; text-align:center; font:600 .7rem/1 var(--f-body); letter-spacing:.14em; text-transform:uppercase; color:#4a3608}
+.status{font:500 .85rem/1.4 var(--f-mono); color:rgba(251,250,246,.7); margin:0}
+
+/* finale */
+.finale{background:var(--sun); color:var(--ink); border-radius:4px; padding:22px 24px; transform:rotate(-1deg); box-shadow:0 8px 0 rgba(0,0,0,.2)}
+.finale h2{font-family:var(--f-display); font-weight:400; font-size:1.8rem; margin:0 0 6px; line-height:1.1}
+.finale p{margin:0}
+.finale .code{font:500 2.4rem/1.2 var(--f-mono); letter-spacing:.12em; margin:8px 0}
+
+/* sheets */
+.sheet{position:relative; background:var(--sheet); color:var(--ink); border-radius:3px; padding:26px 24px 22px; box-shadow:0 2px 0 rgba(0,0,0,.08),0 14px 28px rgba(0,0,0,.28); display:flex; flex-direction:column; gap:16px}
+.sheet:nth-of-type(odd){transform:rotate(-.4deg)} .sheet:nth-of-type(even){transform:rotate(.35deg)}
+.tape{position:absolute; top:-12px; left:50%; width:110px; height:26px; margin-left:-55px; background:rgba(215,38,61,.4); transform:rotate(-3deg)}
+.sheet[data-p="1"] .tape{background:rgba(43,111,214,.45); transform:rotate(2deg)}
+.sheet[data-p="2"] .tape{background:rgba(123,75,196,.45)}
+.eyebrow{font:600 .72rem/1 var(--f-body); letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft); margin:0}
+.sheet h2{font-family:var(--f-display); font-weight:400; font-size:2rem; line-height:1; margin:6px 0 0; text-wrap:balance}
+.riddle{margin:0; font-size:1.06rem; max-width:60ch}
+.riddle em{font-style:normal; font-weight:700}
+.note{margin:0; font-size:.85rem; color:var(--ink-soft)}
+
+/* puzzle 1: counting house ledger */
+.ledger{background:var(--paper-2); border-radius:4px; padding:18px; display:flex; flex-direction:column; gap:14px; min-width:0}
+.ledger .line{display:grid; grid-template-columns:auto 1fr; gap:12px; align-items:center; font-size:1.04rem}
+.ledger .var{width:40px; height:40px; border-radius:50%; display:grid; place-items:center; font:400 1.3rem/1 var(--f-display); color:#fff; background:var(--a1)}
+.ledger .line:nth-child(2) .var{background:var(--a2)} .ledger .line:nth-child(3) .var{background:var(--a3)}
+.ledger .eq{border-top:2px dashed var(--rule); padding-top:14px; font:500 1.7rem/1.3 var(--f-mono); display:flex; flex-wrap:wrap; gap:6px 10px; align-items:center}
+.ledger .eq .v{display:inline-grid; place-items:center; width:40px; height:40px; border-radius:50%; font:400 1.3rem/1 var(--f-display); color:#fff; background:var(--a1)}
+.ledger .eq .v.b{background:var(--a2)} .ledger .eq .v.c{background:var(--a3)}
+.ledger .eq .q{color:var(--ink-soft)}
+
+/* puzzle 2: safe dial */
+.dialwrap{display:grid; grid-template-columns:200px 1fr; gap:18px; align-items:center; background:var(--paper-2); border-radius:4px; padding:18px}
+@media (max-width:520px){.dialwrap{grid-template-columns:1fr; justify-items:center}}
+.dial{width:200px; height:200px; max-width:100%}
+.dial .face{transition:transform .35s cubic-bezier(.3,1.4,.5,1)}
+.steps{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:8px; counter-reset:s; width:100%}
+.steps li{display:flex; gap:12px; align-items:baseline; font-size:1.02rem}
+.steps li::before{counter-increment:s; content:counter(s); font:500 .8rem/1 var(--f-mono); color:var(--ink-soft); border:1px solid var(--rule); border-radius:50%; width:22px; height:22px; display:inline-grid; place-items:center; flex:none}
+.steps b{font-weight:700}
+.dialctl{display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:wrap; grid-column:1/-1}
+.dialctl button{font:600 .9rem/1 var(--f-body); padding:10px 14px; border-radius:6px; border:1px solid var(--rule); background:#fff; color:var(--ink); cursor:pointer; box-shadow:0 2px 0 var(--rule)}
+.dialctl button:hover{background:#f6f3ea}
+.dialctl .cur{font:500 1rem/1 var(--f-mono); color:var(--ink-soft); min-width:9ch; text-align:center}
+
+/* puzzle 3: number maze */
+.mazewrap{background:var(--paper-2); border-radius:4px; padding:18px; display:flex; flex-direction:column; gap:14px; align-items:center}
+.maze{display:grid; grid-template-columns:repeat(5,1fr); gap:6px; width:100%; max-width:320px}
+.cell{aspect-ratio:1; border-radius:8px; border:2px solid transparent; background:#fff; color:var(--ink); font:500 1.2rem/1 var(--f-mono); display:grid; place-items:center; cursor:pointer; box-shadow:0 2px 0 var(--rule); position:relative; padding:0}
+.cell.trail{background:#dcebff; border-color:#b7d1f6}
+.cell.here{background:var(--a2); color:#fff; border-color:var(--a2); box-shadow:0 2px 0 #1b4b96}
+.cell.chest{background:var(--sun); font-family:var(--f-display); font-weight:400; font-size:1.5rem}
+.cell.chest.open{background:var(--good); color:#fff}
+.cell.frog::after{content:"🐸"; position:absolute; font-size:1.1rem; right:-4px; top:-8px}
+.cell.bump{animation:shake .3s}
+.mazectl{display:flex; gap:8px; flex-wrap:wrap; justify-content:center}
+.mazectl button{font:600 .9rem/1 var(--f-body); padding:10px 14px; border-radius:6px; border:1px solid var(--rule); background:#fff; color:var(--ink); cursor:pointer; box-shadow:0 2px 0 var(--rule)}
+.mazectl button:hover{background:#f6f3ea}
+.maze-msg{margin:0; font-weight:600; min-height:1.5em; text-align:center}
+
+/* answer pad */
+.answer{display:flex; flex-direction:column; gap:8px; border-top:1px solid var(--rule); padding-top:16px}
+.answer .lbl{font:600 .78rem/1 var(--f-body); letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft)}
+.pad{display:grid; grid-template-columns:repeat(10,1fr); gap:6px}
+@media (max-width:460px){.pad{grid-template-columns:repeat(5,1fr)}}
+.pad button{font:500 1.15rem/1 var(--f-mono); padding:12px 0; border-radius:5px; border:1px solid var(--rule); background:#fff; color:var(--ink); cursor:pointer; box-shadow:0 2px 0 var(--rule)}
+.pad button:hover{background:#f6f3ea}
+.pad button:disabled{cursor:default; opacity:.4}
+.pad button.right{background:var(--good); color:#fff; border-color:var(--good); opacity:1}
+.row{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap}
+.feedback{margin:0; min-height:1.5em; font-weight:600}
+.feedback.bad{color:var(--bad)} .feedback.good{color:var(--good)}
+.hint-btn{font:600 .85rem/1 var(--f-body); background:none; border:none; color:var(--a2); cursor:pointer; padding:6px 0; text-decoration:underline; text-underline-offset:3px}
+.hint{margin:0; background:#fff7d6; border-left:4px solid var(--sun); padding:10px 14px; font-size:.95rem}
+.shake{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.stamp{position:absolute; right:18px; top:18px; font:400 1.1rem/1 var(--f-display); color:var(--good); border:3px solid var(--good); border-radius:6px; padding:6px 10px; transform:rotate(8deg); opacity:.9}
+button:focus-visible{outline:3px solid var(--a2); outline-offset:2px}
+
+/* game master panel */
+.gm{background:#14261e; border:1px dashed var(--brass); border-radius:8px; padding:20px; display:flex; flex-direction:column; gap:14px; color:var(--sheet)}
+.gm h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:1.5rem; color:var(--brass)}
+.gm p{margin:0; color:rgba(251,250,246,.8); font-size:.92rem; max-width:60ch}
+.setters{display:flex; gap:14px; flex-wrap:wrap}
+.setter{display:flex; flex-direction:column; align-items:center; gap:6px}
+.setter span{font:600 .7rem/1 var(--f-body); letter-spacing:.12em; text-transform:uppercase; color:rgba(251,250,246,.6)}
+.setter .ctl{display:flex; align-items:center; gap:6px}
+.setter button{width:36px; height:36px; border-radius:6px; border:1px solid rgba(255,255,255,.25); background:transparent; color:var(--sheet); font:600 1.2rem/1 var(--f-body); cursor:pointer}
+.setter output{width:48px; height:56px; display:grid; place-items:center; background:var(--steel); border-radius:8px; font:500 1.8rem/1 var(--f-mono)}
+.gm-actions{display:flex; gap:10px; flex-wrap:wrap}
+.btn{font:600 .95rem/1 var(--f-body); padding:12px 16px; border-radius:6px; border:none; cursor:pointer}
+.btn.primary{background:var(--brass); color:#2a1f05}
+.btn.ghost{background:transparent; color:var(--sheet); border:1px solid rgba(255,255,255,.3)}
+.token-row{display:flex; gap:8px; align-items:stretch; flex-wrap:wrap}
+.token{flex:1 1 240px; min-width:0; font:500 .9rem/1.4 var(--f-mono); background:var(--steel); padding:8px 10px; border-radius:6px; user-select:all; word-break:break-all}
+.gm-msg{min-height:1.4em; font-weight:600; color:var(--sun)}
+.gm details{border-top:1px solid rgba(255,255,255,.15); padding-top:12px}
+.gm summary{cursor:pointer; font-weight:600; color:var(--brass)}
+.gm ol{margin:10px 0 0; padding-left:22px; display:flex; flex-direction:column; gap:8px; font-size:.92rem; color:rgba(251,250,246,.85)}
+.gm ol b{color:var(--sheet)}
+.gm code{font-family:var(--f-mono); background:var(--steel); padding:1px 5px; border-radius:4px}
+
+footer{display:flex; justify-content:center}
+footer button{background:none; border:none; color:rgba(251,250,246,.6); font:500 .85rem/1 var(--f-body); text-decoration:underline; cursor:pointer; padding:8px}
+#confetti{position:fixed; inset:0; pointer-events:none; width:100%; height:100%; z-index:5}
+.cover{opacity:.35; pointer-events:none; transition:opacity .3s}
+@media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
+</style>
+</head>
+<body>
+
+
+<canvas id="confetti" aria-hidden="true"></canvas>
+<div class="ruler" aria-hidden="true"></div>
+<main class="wrap">
+  <header>
+    <div>
+      <h1>The <span class="c1">Lockbox</span> <span class="c2">Trials</span></h1>
+      <p class="lede">Three trials stand between you and the box. Crack each one and a wheel on the lock turns.</p>
+      <p class="status" id="status"></p>
+      <button class="gm-btn" id="gmBtn" hidden>Game master: set the code</button>
+    </div>
+    <div class="lock" id="lock" aria-label="Combination lock">
+      <div class="shackle"></div>
+      <div class="lock-body">
+        <div class="wheels">
+          <div class="wheel" data-i="0" aria-label="First number">?</div>
+          <div class="wheel" data-i="1" aria-label="Second number">?</div>
+          <div class="wheel" data-i="2" aria-label="Third number">?</div>
+        </div>
+        <p class="lock-label">Combination</p>
+      </div>
+    </div>
+  </header>
+
+  <section class="gm" id="gm" hidden>
+    <h2>Set the lockbox code</h2>
+    <p>Pick the three numbers on your real lock. The trials rebuild themselves so each one leads to your number.</p>
+    <div class="setters" id="setters"></div>
+    <div class="gm-actions">
+      <button class="btn primary" id="gmSave">Use this code</button>
+      <button class="btn ghost" id="gmShuffle">Shuffle the trials</button>
+      <button class="btn ghost" id="gmClose">Close</button>
+    </div>
+    <p class="gm-msg" id="gmMsg" aria-live="polite"></p>
+    <p id="tokenLabel">Link for your players (it carries the code, scrambled):</p>
+    <div class="token-row"><div class="token" id="gmToken"></div><button class="btn ghost" id="gmCopy">Copy</button></div>
+    <details>
+      <summary>How to host this page on GitHub Pages</summary>
+      <ol>
+        <li><b>Make a repository.</b> On github.com click the <b>+</b> (top right) → <b>New repository</b>. Name it something like <code>lockbox</code>, keep it <b>Public</b>, and create it.</li>
+        <li><b>Upload the file.</b> On the empty repository page click <b>uploading an existing file</b>, drag in <code>index.html</code>, and click <b>Commit changes</b>. The file must be named exactly <code>index.html</code>.</li>
+        <li><b>Turn on Pages.</b> Open <b>Settings → Pages</b>. Under <b>Build and deployment</b> set Source to <b>Deploy from a branch</b>, choose <b>main</b> and <b>/ (root)</b>, and save.</li>
+        <li><b>Wait a minute or two.</b> The Pages screen shows your address, like <code>https://YOUR-NAME.github.io/lockbox/</code>. A 404 at first just means it's still building.</li>
+        <li><b>Set your code.</b> On the live page open this panel, pick your numbers, click <b>Use this code</b>, then copy the link above and send it to your players.</li>
+        <li><b>Updating later:</b> open <code>index.html</code> in the repository, click the pencil, paste the new file over it, and commit. The site updates itself.</li>
+      </ol>
+    </details>
+  </section>
+
+  <section class="finale" id="finale" hidden aria-live="polite">
+    <h2>The lock clicks open.</h2>
+    <p>Spin your lockbox to:</p>
+    <p class="code" id="finalCode"></p>
+    <p>Go open it.</p>
+  </section>
+
+  <div id="puzzles"></div>
+
+  <footer><button id="restart">Start the trials over</button></footer>
+</main>
+
+<script>
+(function(){
+  // ---------- seeded randomness ----------
+  function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+  const pick=(r,arr)=>arr[Math.floor(r()*arr.length)];
+  const int=(r,lo,hi)=>lo+Math.floor(r()*(hi-lo+1));
+
+  // ---------- link token ----------
+  const ABC="abcdefghijklmnopqrstuvwxyz";
+  function encode(cfg){const s=cfg.d.join("")+String(cfg.seed%1000).padStart(3,"0");return "box-"+[...s].map((ch,i)=>ABC[(+ch+i*7+3)%26]).join("")}
+  function decode(tok){
+    const m=/^box-([a-z]{6})$/.exec(tok||""); if(!m) return null;
+    const ds=[...m[1]].map((ch,i)=>((ABC.indexOf(ch)-i*7-3)%26+26)%26);
+    if(ds.some(x=>x>9)) return null;
+    return {d:ds.slice(0,3), seed:ds[3]*100+ds[4]*10+ds[5]};
+  }
+  const valid=c=>c&&Array.isArray(c.d)&&c.d.length===3&&c.d.every(x=>Number.isInteger(x)&&x>=0&&x<=9)&&Number.isInteger(c.seed);
+
+  // ---------- state ----------
+  let cfg={d:[4,2,8], seed:1}, source="default";
+  const fromHash=decode(location.hash.slice(1));
+  if(fromHash){cfg=fromHash; source="link"}
+  let solved=[false,false,false];
+  let db=null;
+  const keyFor=c=>"lbt:"+c.d.join("")+":"+c.seed;
+  function loadProgress(){try{const v=JSON.parse(localStorage.getItem(keyFor(cfg))||"null");solved=Array.isArray(v)&&v.length===3?v.map(Boolean):[false,false,false]}catch(e){solved=[false,false,false]}}
+  function saveProgress(){try{localStorage.setItem(keyFor(cfg),JSON.stringify(solved))}catch(e){}}
+
+  // ---------- puzzle builders ----------
+  const RIDDLES=[
+    ["legs on a spider",8],["days in a week",7],["sides on a stop sign",8],["wheels on a tricycle",3],
+    ["strings on a guitar",6],["months in a year",12],["fingers on two hands",10],["eyes on a cat",2],
+    ["sides of a triangle",3],["legs on an ant",6],["hours on a clock face",12],["wheels on a bicycle",2],
+    ["blind mice in the rhyme",3],["lives a cat is said to have",9],["planets in our solar system",8],
+    ["colors in a rainbow",7],["sides on a dice",6],["points on a star",5],["senses people have",5],
+    ["arms on an octopus",8],["noses on your face",1],["legs on a snake",0],["wheels on a unicycle",1],
+    ["horns on a unicorn",1],["seas in \u201cthe seven seas\u201d",7],["wheels on a car",4],["letters in the alphabet",26],
+    ["minutes in a quarter hour",15],["toes on one foot",5],["sides on a hexagon",6],["players on a basketball team on court",5]
+  ];
+  const TEMPLATES=[
+    {show:(A,B,C)=>[A,"+",B,"\u2212",C], f:(a,b,c)=>a+b-c},
+    {show:(A,B,C)=>[A,"\u00d7",B,"\u2212",C], f:(a,b,c)=>a*b-c},
+    {show:(A,B,C)=>["(",A,"+",B,")","\u00f7",C], f:(a,b,c)=>c>0&&(a+b)%c===0?(a+b)/c:-1},
+    {show:(A,B,C)=>[A,"\u2212",B,"\u2212",C], f:(a,b,c)=>a-b-c},
+    {show:(A,B,C)=>[A,"\u00d7",B,"\u00f7",C], f:(a,b,c)=>c>0&&(a*b)%c===0?(a*b)/c:-1}
+  ];
+  function buildP1(r,d){
+    const pool=shuffle(r,RIDDLES), ts=shuffle(r,TEMPLATES.map((t,i)=>i));
+    for(const ti of ts) for(let i=0;i<pool.length;i++) for(let j=0;j<pool.length;j++) for(let k=0;k<pool.length;k++){
+      if(i===j||j===k||i===k) continue;
+      const [a,b,c]=[pool[i][1],pool[j][1],pool[k][1]];
+      if(a===b||b===c||a===c) continue;
+      if(TEMPLATES[ti].f(a,b,c)===d) return {A:pool[i],B:pool[j],C:pool[k],t:TEMPLATES[ti]};
+    }
+    return {A:["legs on a spider",8],B:["days in a week",7],C:["wheels on a tricycle",3],t:TEMPLATES[0]};
+  }
+  function shuffle(r,arr){const a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+  function buildP2(r,d){
+    // real safe order: right, then left, then right
+    const start=int(r,0,9);
+    const n1=int(r,2,9), n2=int(r,2,14);
+    let pos=((start+n1-n2)%10+10)%10;
+    let need=((d-pos)%10+10)%10; if(need===0) need=10;
+    return {start,moves:[{dir:1,n:n1},{dir:-1,n:n2},{dir:1,n:need}]};
+  }
+
+  function buildP3(r,d){
+    const N=5;
+    // random self-avoiding walk from the top-left corner
+    let path=null;
+    for(let attempt=0;attempt<200&&!path;attempt++){
+      const L=int(r,7,10), seen=new Set(["0,0"]), p=[[0,0]];
+      let cur=[0,0], ok=true;
+      for(let s=0;s<L;s++){
+        const opts=[[1,0],[-1,0],[0,1],[0,-1]].map(([dx,dy])=>[cur[0]+dx,cur[1]+dy]).filter(([x,y])=>x>=0&&y>=0&&x<N&&y<N&&!seen.has(x+","+y));
+        if(!opts.length){ok=false;break}
+        cur=pick(r,opts); seen.add(cur.join(",")); p.push(cur);
+      }
+      if(ok) path=p;
+    }
+    if(!path) path=[[0,0],[1,0],[2,0],[3,0],[4,0],[4,1],[4,2],[4,3]];
+    const val=Array.from({length:N},()=>Array(N).fill(0));
+    const onPath=Array.from({length:N},()=>Array(N).fill(false));
+    let v=int(r,1,3);
+    path.forEach(([x,y],i)=>{onPath[y][x]=true; val[y][x]=v; v+=int(r,1,3)});
+    // every off-path cell that touches the path must be no higher than its path neighbor(s)
+    for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+      if(onPath[y][x]) continue;
+      let cap=Infinity;
+      [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{const nx=x+dx,ny=y+dy;if(nx>=0&&ny>=0&&nx<N&&ny<N&&onPath[ny][nx]) cap=Math.min(cap,val[ny][nx])});
+      val[y][x]=cap===Infinity?int(r,1,20):int(r,1,Math.max(1,cap));
+    }
+    const end=path[path.length-1];
+    return {N,val,start:path[0],end,steps:path.length-1};
+  }
+
+  const HINTS=[
+    ()=>"Solve the three riddles first and write the numbers down. Then do the math in the order shown. Anything in brackets happens first, and \u00d7 and \u00f7 happen before + and \u2212.",
+    p=>`Right makes the number go up, left makes it go down, and after 9 comes 0 again. Use the dial buttons to follow the three turns starting from ${p.start}.`,
+    ()=>"From the frog, look at the four touching squares. Only one of them is higher than where you stand. Keep doing that and you will reach the chest. Use Undo if you get stuck."
+  ];
+
+  // ---------- render ----------
+  const $=s=>document.querySelector(s);
+  const puzzlesEl=$("#puzzles");
+  let P=[];
+  let dialPos=0;
+
+  function render(){
+    const r=mulberry32(cfg.seed*7919+cfg.d[0]*131+cfg.d[1]*17+cfg.d[2]+1);
+    P=[buildP1(r,cfg.d[0]),buildP2(r,cfg.d[1]),buildP3(r,cfg.d[2])];
+    const [p1,p2,p3]=P;
+    dialPos=p2.start;
+    const dirWord=m=>m.dir>0?"right":"left";
+    puzzlesEl.innerHTML=`
+    <div class="wrap">
+    <section class="sheet" data-p="0">
+      <div class="tape"></div>
+      <div><p class="eyebrow">Trial 1 \u00b7 the first number</p><h2>The Counting House</h2></div>
+      <p class="riddle">The clerk left three riddles and one sum. Work out each riddle's number, then <em>do the math. The answer is your number.</em></p>
+      <div class="ledger">
+        <div class="line"><span class="var">A</span><span>the number of ${p1.A[0]}</span></div>
+        <div class="line"><span class="var">B</span><span>the number of ${p1.B[0]}</span></div>
+        <div class="line"><span class="var">C</span><span>the number of ${p1.C[0]}</span></div>
+        <div class="eq" aria-label="Equation">${p1.t.show('<span class="v">A</span>','<span class="v b">B</span>','<span class="v c">C</span>').join(" ")} = <span class="q">?</span></div>
+      </div>
+      ${padHTML(0)}
+    </section>
+
+    <section class="sheet" data-p="1">
+      <div class="tape"></div>
+      <div><p class="eyebrow">Trial 2 · the second number</p><h2>The Safe Dial</h2></div>
+      <p class="riddle">The old safe has a dial with ten numbers. Follow the turning instructions exactly. <em>The number the pointer lands on is your number.</em></p>
+      <div class="dialwrap">
+        <svg class="dial" viewBox="0 0 200 200" role="img" aria-label="A safe dial, numbers 0 to 9 around a circle">
+          <circle cx="100" cy="100" r="96" fill="#2a2c33"/>
+          <circle cx="100" cy="100" r="88" fill="#d9d4c4" stroke="#8d8a7e" stroke-width="2"/>
+          <g class="face" id="dialFace" style="transform-origin:100px 100px">
+            ${[...Array(10)].map((_,i)=>{const a=i*36;return `<g transform="rotate(${a} 100 100)"><rect x="98.5" y="16" width="3" height="10" fill="#2a2c33"/><text x="100" y="44" text-anchor="middle" font-family="DM Mono,monospace" font-size="18" font-weight="500" fill="#24252b" transform="rotate(${-a} 100 44)">${i}</text></g>`}).join("")}
+            ${[...Array(40)].map((_,i)=>i%4?`<rect x="99.3" y="16" width="1.4" height="6" fill="#8d8a7e" transform="rotate(${i*9} 100 100)"/>`:"").join("")}
+          </g>
+          <circle cx="100" cy="100" r="34" fill="#2a2c33"/>
+          <circle cx="100" cy="100" r="28" fill="#4a4d57"/>
+          <polygon points="100,2 92,14 108,14" fill="#d7263d"/>
+        </svg>
+        <ol class="steps">
+          <li>Start with the pointer on <b>${p2.start}</b>.</li>
+          ${p2.moves.map(m=>`<li>Turn <b>${dirWord(m)}</b> ${m.n} click${m.n===1?"":"s"}.</li>`).join("")}
+        </ol>
+        <div class="dialctl">
+          <button id="dialL" aria-label="Turn left one click">◀ Left</button>
+          <span class="cur" id="dialCur"></span>
+          <button id="dialR" aria-label="Turn right one click">Right ▶</button>
+          <button id="dialReset">Reset to ${p2.start}</button>
+        </div>
+      </div>
+      <p class="note">Right makes the number go up. Left makes it go down. After 9 comes 0.</p>
+      ${padHTML(1)}
+    </section>
+
+    <section class="sheet" data-p="2">
+      <div class="tape"></div>
+      <div><p class="eyebrow">Trial 3 \u00b7 the third number</p><h2>The Frog Pond</h2></div>
+      <p class="riddle">Hop the frog from pad to pad until you reach the treasure chest. A frog can only hop to a touching pad (no diagonals) with a <em>higher</em> number than the one it's sitting on. <em>The chest shows your number when you reach it.</em></p>
+      <div class="mazewrap">
+        <div class="maze" id="maze" role="group" aria-label="Lily pad grid"></div>
+        <p class="maze-msg" id="mazeMsg"></p>
+        <div class="mazectl"><button id="mazeUndo">Undo hop</button><button id="mazeReset">Back to start</button></div>
+      </div>
+      ${padHTML(2)}
+    </section>
+    </div>`;
+    // dial wiring
+    const face=$("#dialFace");
+    let turns=0; // cumulative for smooth rotation
+    const setDial=()=>{face.style.transform=`rotate(${-turns*36}deg)`; $("#dialCur").textContent="Pointer on "+dialPos};
+    $("#dialL").addEventListener("click",()=>{dialPos=(dialPos+9)%10; turns--; setDial()});
+    $("#dialR").addEventListener("click",()=>{dialPos=(dialPos+1)%10; turns++; setDial()});
+    $("#dialReset").addEventListener("click",()=>{dialPos=p2.start; turns=p2.start; setDial()});
+    turns=p2.start; setDial();
+
+    // maze wiring
+    const mz=$("#maze"), mmsg=$("#mazeMsg");
+    let trail=[p3.start.slice()];
+    const isEnd=(x,y)=>x===p3.end[0]&&y===p3.end[1];
+    const cellAt=(x,y)=>mz.querySelector(`[data-x="${x}"][data-y="${y}"]`);
+    mz.innerHTML=p3.val.map((row,y)=>row.map((v,x)=>`<button class="cell${isEnd(x,y)?" chest":""}" data-x="${x}" data-y="${y}" aria-label="${isEnd(x,y)?"treasure chest":"pad "+v}">${isEnd(x,y)?"?":v}</button>`).join("")).join("");
+    const drawMaze=()=>{
+      mz.querySelectorAll(".cell").forEach(c=>{c.classList.remove("trail","here","frog","open")});
+      trail.forEach(([x,y],i)=>{const c=cellAt(x,y); c.classList.add(i===trail.length-1?"here":"trail"); if(i===trail.length-1) c.classList.add("frog")});
+      const [cx,cy]=trail[trail.length-1];
+      if(isEnd(cx,cy)){const c=cellAt(cx,cy); c.classList.add("open"); c.textContent=cfg.d[2]; mmsg.textContent="The chest creaks open. There's your number."}
+      else {const c=cellAt(p3.end[0],p3.end[1]); c.textContent="?"; mmsg.textContent=trail.length===1?"Tap a touching pad to hop.":`Sitting on ${p3.val[cy][cx]}. ${trail.length-1} hop${trail.length===2?"":"s"} so far.`}
+    };
+    mz.addEventListener("click",e=>{
+      const c=e.target.closest(".cell"); if(!c) return;
+      const x=+c.dataset.x,y=+c.dataset.y,[cx,cy]=trail[trail.length-1];
+      if(isEnd(cx,cy)) return;
+      const adj=Math.abs(x-cx)+Math.abs(y-cy)===1;
+      const higher=isEnd(x,y)||p3.val[y][x]>p3.val[cy][cx];
+      if(adj&&higher){trail.push([x,y]); drawMaze();}
+      else {c.classList.remove("bump"); void c.offsetWidth; c.classList.add("bump"); mmsg.textContent=!adj?"Too far. Frogs only hop to a touching pad.":"That pad is lower. Frogs only hop up to a higher number.";}
+    });
+    $("#mazeUndo").addEventListener("click",()=>{if(trail.length>1){trail.pop();drawMaze()}});
+    $("#mazeReset").addEventListener("click",()=>{trail=[p3.start.slice()];drawMaze()});
+    drawMaze();
+
+    puzzlesEl.querySelectorAll(".sheet").forEach(sec=>{
+      const i=+sec.dataset.p;
+      sec.querySelectorAll(".pad button").forEach(b=>b.addEventListener("click",()=>guess(i,+b.dataset.n,sec)));
+      sec.querySelector(".hint-btn").addEventListener("click",e=>{const h=sec.querySelector(".hint");h.hidden=!h.hidden;e.target.textContent=h.hidden?"Need a hint?":"Hide hint"});
+    });
+    syncSolved(false);
+  }
+  function padHTML(i){
+    return `<div class="answer">
+      <span class="lbl" id="lbl${i}">Your answer</span>
+      <div class="pad" role="group" aria-labelledby="lbl${i}">${[0,1,2,3,4,5,6,7,8,9].map(n=>`<button data-n="${n}">${n}</button>`).join("")}</div>
+      <div class="row"><p class="feedback" aria-live="polite"></p><button class="hint-btn">Need a hint?</button></div>
+      <p class="hint" hidden>${HINTS[i](P[i])}</p>
+    </div>`;
+  }
+
+  const MISSES=["Not that one. Look again.","Nope. The lock didn't budge.","Hmm, not quite. Check your work?","Close, but the wheel won't turn."];
+  let missCount=0;
+  function guess(i,n,sec){
+    if(solved[i]) return;
+    const fb=sec.querySelector(".feedback");
+    if(n===cfg.d[i]){ solved[i]=true; saveProgress(); syncSolved(true); }
+    else { fb.className="feedback bad"; fb.textContent=MISSES[missCount++%MISSES.length]; sec.classList.remove("shake"); void sec.offsetWidth; sec.classList.add("shake"); }
+  }
+  function syncSolved(animate){
+    document.querySelectorAll(".wheel").forEach((w,i)=>{
+      if(solved[i]){ if(w.textContent!==String(cfg.d[i])){w.textContent=cfg.d[i]; if(animate) w.classList.remove("set"); void w.offsetWidth; w.classList.add("set")} }
+      else {w.textContent="?"; w.classList.remove("set")}
+    });
+    puzzlesEl.querySelectorAll(".sheet").forEach(sec=>{
+      const i=+sec.dataset.p, fb=sec.querySelector(".feedback");
+      sec.querySelectorAll(".pad button").forEach(b=>{b.disabled=solved[i]; b.classList.toggle("right",solved[i]&&+b.dataset.n===cfg.d[i])});
+      let st=sec.querySelector(".stamp");
+      if(solved[i]){ if(!st){st=document.createElement("div");st.className="stamp";sec.appendChild(st)} st.textContent="Solved · "+cfg.d[i]; fb.className="feedback good"; fb.textContent=`That's it. Number ${i+1} is ${cfg.d[i]}.`; }
+      else if(st) st.remove();
+    });
+    const all=solved.every(Boolean);
+    $("#lock").classList.toggle("open",all);
+    $("#finale").hidden=!all;
+    $("#finalCode").textContent=cfg.d.join(" – ");
+    if(all&&animate){ $("#finale").scrollIntoView({behavior:"smooth",block:"center"}); confetti(); }
+  }
+
+  // ---------- confetti ----------
+  function confetti(){
+    if(matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const cv=$("#confetti"), ctx=cv.getContext("2d"), dpr=devicePixelRatio||1;
+    cv.width=innerWidth*dpr; cv.height=innerHeight*dpr; ctx.scale(dpr,dpr);
+    const cols=["#d7263d","#f26a2e","#f6c945","#36a35a","#2b6fd6","#7b4bc4","#fdfdfb"];
+    const bits=Array.from({length:140},()=>({x:innerWidth/2+(Math.random()-.5)*120,y:innerHeight*.35,vx:(Math.random()-.5)*14,vy:-Math.random()*14-4,w:6+Math.random()*8,h:4+Math.random()*6,r:Math.random()*6,vr:(Math.random()-.5)*.4,c:cols[Math.floor(Math.random()*cols.length)]}));
+    const t0=performance.now();
+    (function frame(t){
+      ctx.clearRect(0,0,innerWidth,innerHeight);
+      bits.forEach(b=>{b.vy+=.35;b.vx*=.99;b.x+=b.vx;b.y+=b.vy;b.r+=b.vr;ctx.save();ctx.translate(b.x,b.y);ctx.rotate(b.r);ctx.fillStyle=b.c;ctx.fillRect(-b.w/2,-b.h/2,b.w,b.h);ctx.restore()});
+      if(t-t0<3200) requestAnimationFrame(frame); else ctx.clearRect(0,0,innerWidth,innerHeight);
+    })(t0);
+  }
+
+  // ---------- game master ----------
+  let draft={d:cfg.d.slice(),seed:cfg.seed};
+  const linkFor=c=>location.origin+location.pathname+"#"+encode(c);
+  function renderSetters(){
+    $("#setters").innerHTML=["First","Second","Third"].map((lbl,i)=>`
+      <div class="setter"><span>${lbl}</span><div class="ctl">
+        <button data-i="${i}" data-s="-1" aria-label="${lbl} number down">−</button>
+        <output id="set${i}">${draft.d[i]}</output>
+        <button data-i="${i}" data-s="1" aria-label="${lbl} number up">+</button></div></div>`).join("");
+    $("#setters").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{const i=+b.dataset.i;draft.d[i]=(draft.d[i]+(+b.dataset.s)+10)%10;$("#set"+i).textContent=draft.d[i];$("#gmToken").textContent=linkFor(draft);$("#gmMsg").textContent=""}));
+    $("#gmToken").textContent=linkFor(draft);
+  }
+  $("#gmBtn").addEventListener("click",()=>{draft={d:cfg.d.slice(),seed:cfg.seed};renderSetters();$("#gm").hidden=false;$("#gmMsg").textContent=""});
+  $("#gmClose").addEventListener("click",()=>{$("#gm").hidden=true});
+  $("#gmShuffle").addEventListener("click",()=>{draft.seed=(draft.seed+1+Math.floor(Math.random()*400))%1000;$("#gmToken").textContent=linkFor(draft);$("#gmMsg").textContent="New trial layout ready. Click “Use this code” to apply it."});
+  $("#gmCopy").addEventListener("click",async()=>{
+    const t=$("#gmToken").textContent;
+    try{await navigator.clipboard.writeText(t);$("#gmMsg").textContent="Link copied."}
+    catch(e){const sel=getSelection(),rg=document.createRange();rg.selectNodeContents($("#gmToken"));sel.removeAllRanges();sel.addRange(rg);$("#gmMsg").textContent="Link selected. Press copy on your keyboard."}
+  });
+  $("#gmSave").addEventListener("click",async()=>{
+    const msg=$("#gmMsg"), next={d:draft.d.slice(),seed:draft.seed};
+    history.replaceState(null,"",location.pathname+"#"+encode(next));
+    source="link"; applyConfig(next);
+    if(db){
+      msg.textContent="Saving for everyone…";
+      try{ await db.doc("game/config").set(next); msg.textContent=`Saved. Everyone opening this page now solves for ${next.d.join("-")}. The link below works too.`; }
+      catch(e){ msg.textContent=`This page now solves for ${next.d.join("-")}. Cloud save didn't go through, so share the link below.`; }
+    } else {
+      msg.textContent=`This page now solves for ${next.d.join("-")}. Copy the link below for your players.`;
+    }
+  });
+  function applyConfig(c){
+    if(c.d.join()===cfg.d.join()&&c.seed===cfg.seed) return;
+    cfg={d:c.d.slice(),seed:c.seed}; loadProgress(); render();
+  }
+  $("#restart").addEventListener("click",()=>{solved=[false,false,false];saveProgress();render()});
+
+  // ---------- boot ----------
+  loadProgress(); render();
+  const statusEl=$("#status");
+  const use=window.claude&&window.claude.use;
+  if(use){
+    if(source!=="link"){puzzlesEl.classList.add("cover"); statusEl.textContent="Fetching today's trials…"}
+    let settled=false;
+    const settle=()=>{if(settled) return; settled=true; puzzlesEl.classList.remove("cover"); if(source!=="link") statusEl.textContent=""};
+    setTimeout(settle,4000);
+    window.claude.use("user").then(async u=>{ if(u&&await u.isOwner()) $("#gmBtn").hidden=false; }).catch(()=>{});
+    window.claude.use("db").then(d=>{
+      db=d;
+      if(!d){settle();return}
+      d.doc("game/config").onSnapshot(s=>{
+        if(source!=="link"&&s.exists){const v=s.data(); if(valid(v)) applyConfig(v)}
+        settle();
+      },()=>settle());
+    }).catch(()=>settle());
+  } else {
+    // standalone copy (GitHub Pages etc.): anyone can be game master
+    $("#gmBtn").hidden=false;
+  }
+})();
+</script>
+
+</body>
+</html>
