@@ -159,11 +159,6 @@ button:focus-visible{outline:3px solid var(--a2); outline-offset:2px}
 .token-row{display:flex; gap:8px; align-items:stretch; flex-wrap:wrap}
 .token{flex:1 1 240px; min-width:0; font:500 .9rem/1.4 var(--f-mono); background:var(--steel); padding:8px 10px; border-radius:6px; user-select:all; word-break:break-all}
 .gm-msg{min-height:1.4em; font-weight:600; color:var(--sun)}
-.gm details{border-top:1px solid rgba(255,255,255,.15); padding-top:12px}
-.gm summary{cursor:pointer; font-weight:600; color:var(--brass)}
-.gm ol{margin:10px 0 0; padding-left:22px; display:flex; flex-direction:column; gap:8px; font-size:.92rem; color:rgba(251,250,246,.85)}
-.gm ol b{color:var(--sheet)}
-.gm code{font-family:var(--f-mono); background:var(--steel); padding:1px 5px; border-radius:4px}
 
 footer{display:flex; justify-content:center}
 footer button{background:none; border:none; color:rgba(251,250,246,.6); font:500 .85rem/1 var(--f-body); text-decoration:underline; cursor:pointer; padding:8px}
@@ -210,17 +205,6 @@ footer button{background:none; border:none; color:rgba(251,250,246,.6); font:500
     <p class="gm-msg" id="gmMsg" aria-live="polite"></p>
     <p id="tokenLabel">Link for your players (it carries the code, scrambled):</p>
     <div class="token-row"><div class="token" id="gmToken"></div><button class="btn ghost" id="gmCopy">Copy</button></div>
-    <details>
-      <summary>How to host this page on GitHub Pages</summary>
-      <ol>
-        <li><b>Make a repository.</b> On github.com click the <b>+</b> (top right) → <b>New repository</b>. Name it something like <code>lockbox</code>, keep it <b>Public</b>, and create it.</li>
-        <li><b>Upload the file.</b> On the empty repository page click <b>uploading an existing file</b>, drag in <code>index.html</code>, and click <b>Commit changes</b>. The file must be named exactly <code>index.html</code>.</li>
-        <li><b>Turn on Pages.</b> Open <b>Settings → Pages</b>. Under <b>Build and deployment</b> set Source to <b>Deploy from a branch</b>, choose <b>main</b> and <b>/ (root)</b>, and save.</li>
-        <li><b>Wait a minute or two.</b> The Pages screen shows your address, like <code>https://YOUR-NAME.github.io/lockbox/</code>. A 404 at first just means it's still building.</li>
-        <li><b>Set your code.</b> On the live page open this panel, pick your numbers, click <b>Use this code</b>, then copy the link above and send it to your players.</li>
-        <li><b>Updating later:</b> open <code>index.html</code> in the repository, click the pencil, paste the new file over it, and commit. The site updates itself.</li>
-      </ol>
-    </details>
   </section>
 
   <section class="finale" id="finale" hidden aria-live="polite">
@@ -503,7 +487,10 @@ footer button{background:none; border:none; color:rgba(251,250,246,.6); font:500
 
   // ---------- game master ----------
   let draft={d:cfg.d.slice(),seed:cfg.seed};
-  const linkFor=c=>location.origin+location.pathname+"#"+encode(c);
+  // Inside Claude the page runs in a frame on another domain, so use the real artifact link there.
+  const ARTIFACT_URL="https://claude.ai/artifact/F3dXmWUQWV91ZZ3Wiowj9b";
+  const pageUrl=()=>(window.claude&&window.claude.use)||/claudeusercontent\.com$/.test(location.hostname)?ARTIFACT_URL:location.origin+location.pathname;
+  const linkFor=c=>pageUrl()+"#"+encode(c);
   function renderSetters(){
     $("#setters").innerHTML=["First","Second","Third"].map((lbl,i)=>`
       <div class="setter"><span>${lbl}</span><div class="ctl">
